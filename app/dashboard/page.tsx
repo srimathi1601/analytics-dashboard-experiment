@@ -16,7 +16,6 @@ import {
   Clock,
 } from "lucide-react";
 
-type StatEntry = { value: number; growth: number; trend: number[] };
 type Stats = typeof mockStats;
 type TrafficItem = { date: string; pageviews: number; sessions: number; bounceRate: number };
 type CountryItem = { country: string; pct: number; sessions: number };
@@ -91,7 +90,7 @@ export default function DashboardPage() {
     <div>
       <TopBar
         title="Dashboard Overview"
-        subtitle="Monday, April 20, 2026 — Real-time analytics"
+        subtitle={`${new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" })} — Real-time analytics`}
       />
 
       <div className="p-6 space-y-6">

@@ -1,5 +1,5 @@
-import { BetaAnalyticsDataClient } from "@google-analytics/data";
 import { NextResponse } from "next/server";
+import client, { GA4_PROPERTY } from "@/lib/ga4";
 
 const SOURCE_MAP: Record<string, string> = {
   buy_now_click: "Hero CTA",
@@ -11,37 +11,13 @@ const SOURCE_MAP: Record<string, string> = {
   powered_by_click: "Powered By Section",
 };
 
-function getClient() {
-  const key = process.env.GOOGLE_SERVICE_ACCOUNT_KEY;
-  if (key) {
-    const creds = JSON.parse(key);
-    if (typeof creds.private_key === 'string') {
-      creds.private_key = creds.private_key.replace(/\\n/g, '\n');
-    }
-    return new BetaAnalyticsDataClient({ credentials: creds });
-  }
-  const keyFile = process.env.GOOGLE_APPLICATION_CREDENTIALS;
-  if (keyFile) {
-    return new BetaAnalyticsDataClient({ keyFilename: keyFile });
-  }
-  throw new Error("No credentials: set GOOGLE_SERVICE_ACCOUNT_KEY or GOOGLE_APPLICATION_CREDENTIALS in .env.local");
-}
-
 export async function GET(request: Request) {
-  const rawId = process.env.GA4_PROPERTY_ID;
-  if (!rawId) {
-    return NextResponse.json({ error: "GA4_PROPERTY_ID is not set" }, { status: 500 });
-  }
-  const propertyId = `properties/${rawId}`;
-
   const { searchParams } = new URL(request.url);
   const days = searchParams.get("days") ?? "30";
 
   try {
-    const client = getClient();
-
     const [response] = await client.runReport({
-      property: propertyId,
+      property: GA4_PROPERTY,
       dateRanges: [{ startDate: `${days}daysAgo`, endDate: "today" }],
       dimensions: [{ name: "eventName" }, { name: "date" }],
       metrics: [{ name: "eventCount" }],
