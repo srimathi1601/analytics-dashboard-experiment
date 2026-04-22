@@ -1,21 +1,16 @@
 import { BetaAnalyticsDataClient } from '@google-analytics/data';
 
-function parseCredentials(raw: string) {
-  const creds = JSON.parse(raw);
-  // .env.local stores \n as literal backslash-n; convert to real newlines
-  if (typeof creds.private_key === 'string') {
-    creds.private_key = creds.private_key.replace(/\\n/g, '\n');
-  }
-  return creds;
-}
-
-const rawKey = process.env.GOOGLE_SERVICE_ACCOUNT_KEY;
-
-const client = new BetaAnalyticsDataClient(
-  rawKey
-    ? { credentials: parseCredentials(rawKey) }
-    : { keyFilename: process.env.GOOGLE_APPLICATION_CREDENTIALS }
-);
+const client = new BetaAnalyticsDataClient({
+  credentials: {
+    type: 'service_account',
+    project_id: process.env.GOOGLE_PROJECT_ID,
+    private_key_id: process.env.GOOGLE_PRIVATE_KEY_ID,
+    // .env stores \n as literal backslash-n; convert to real newlines
+    private_key: process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+    client_email: process.env.GOOGLE_CLIENT_EMAIL,
+    client_id: process.env.GOOGLE_CLIENT_ID,
+  },
+});
 
 export const GA4_PROPERTY = `properties/${process.env.GA4_PROPERTY_ID}`;
 export default client;

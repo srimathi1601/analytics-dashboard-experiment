@@ -1,5 +1,5 @@
-import { BetaAnalyticsDataClient } from "@google-analytics/data";
 import { NextResponse } from "next/server";
+import client, { GA4_PROPERTY } from "@/lib/ga4";
 
 // Sportstech.io custom event names fired via GTM-P6JM5VS2
 const TRACKED_EVENTS = [
@@ -12,42 +12,19 @@ const TRACKED_EVENTS = [
   "powered_by_click",
 ];
 
-function getClient() {
-  const key = process.env.GOOGLE_SERVICE_ACCOUNT_KEY;
-  if (key) {
-    const creds = JSON.parse(key);
-    if (typeof creds.private_key === 'string') {
-      creds.private_key = creds.private_key.replace(/\\n/g, '\n');
-    }
-    return new BetaAnalyticsDataClient({ credentials: creds });
-  }
-  const keyFile = process.env.GOOGLE_APPLICATION_CREDENTIALS;
-  if (keyFile) {
-    return new BetaAnalyticsDataClient({ keyFilename: keyFile });
-  }
-  throw new Error("No credentials: set GOOGLE_SERVICE_ACCOUNT_KEY or GOOGLE_APPLICATION_CREDENTIALS in .env.local");
-}
-
 export async function GET() {
-  const rawId = process.env.GA4_PROPERTY_ID;
-  if (!rawId) {
-    return NextResponse.json({ error: "GA4_PROPERTY_ID is not set" }, { status: 500 });
-  }
-  const propertyId = `properties/${rawId}`;
-
   try {
-    const client = getClient();
 
     // Realtime report — events fired in the last 30 minutes
     const [realtime] = await client.runRealtimeReport({
-      property: propertyId,
+      property: GA4_PROPERTY,
       dimensions: [{ name: "eventName" }],
       metrics: [{ name: "eventCount" }],
     });
 
     // Active users right now
     const [activeUsersReport] = await client.runRealtimeReport({
-      property: propertyId,
+      property: GA4_PROPERTY,
       metrics: [{ name: "activeUsers" }],
     });
 
