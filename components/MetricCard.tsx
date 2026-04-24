@@ -12,6 +12,7 @@ interface MetricCardProps {
   color: "indigo" | "cyan" | "purple" | "green" | "pink" | "amber";
   prefix?: string;
   suffix?: string;
+  loading?: boolean;
 }
 
 const colorMap = {
@@ -68,9 +69,27 @@ export default function MetricCard({
   color,
   prefix = "",
   suffix = "",
+  loading = false,
 }: MetricCardProps) {
   const c = colorMap[color];
   const isPositive = growth >= 0;
+
+  if (loading) {
+    return (
+      <div
+        className="relative overflow-hidden rounded-2xl p-5 animate-pulse"
+        style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}
+      >
+        <div className="flex items-start justify-between mb-4">
+          <div className="w-10 h-10 rounded-xl bg-white/10" />
+          <div className="w-16 h-6 rounded-lg bg-white/10" />
+        </div>
+        <div className="w-28 h-8 rounded-lg bg-white/10 mb-2" />
+        <div className="w-20 h-3 rounded bg-white/10 mb-4" />
+        <div className="w-full h-8 rounded-lg bg-white/10" />
+      </div>
+    );
+  }
 
   return (
     <div

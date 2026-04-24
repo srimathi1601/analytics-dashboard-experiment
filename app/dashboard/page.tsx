@@ -43,40 +43,45 @@ export default function DashboardPage() {
     avgDuration: "—",
     bounceRate: "—",
   });
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     async function fetchAll() {
-      const [overviewRes, trafficRes, countriesRes] = await Promise.allSettled([
-        fetch("/api/analytics/overview"),
-        fetch("/api/analytics/traffic"),
-        fetch("/api/analytics/countries"),
-      ]);
+      try {
+        const [overviewRes, trafficRes, countriesRes] = await Promise.allSettled([
+          fetch("/api/analytics/overview"),
+          fetch("/api/analytics/traffic"),
+          fetch("/api/analytics/countries"),
+        ]);
 
-      if (overviewRes.status === "fulfilled" && overviewRes.value.ok) {
-        const data = await overviewRes.value.json();
-        setStats((prev) => ({
-          ...prev,
-          totalUsers: { value: data.totalUsers.value, growth: data.totalUsers.growth, trend: [] },
-          sessions: { value: data.sessions.value, growth: data.sessions.growth, trend: [] },
-          conversions: { value: data.conversions.value, growth: data.conversions.growth, trend: [] },
-          activeUsers: { value: data.activeUsers.value, growth: data.activeUsers.growth, trend: [] },
-        }));
-        setQuickStats({
-          avgDuration: data.avgSessionDuration?.value ?? "—",
-          bounceRate: data.bounceRate?.value != null ? `${data.bounceRate.value}%` : "—",
-        });
-        setLastFetched(new Date().toLocaleTimeString());
-      }
+        if (overviewRes.status === "fulfilled" && overviewRes.value.ok) {
+          const data = await overviewRes.value.json();
+          setStats((prev) => ({
+            ...prev,
+            totalUsers: { value: data.totalUsers.value, growth: data.totalUsers.growth, trend: [] },
+            sessions: { value: data.sessions.value, growth: data.sessions.growth, trend: [] },
+            conversions: { value: data.conversions.value, growth: data.conversions.growth, trend: [] },
+            activeUsers: { value: data.activeUsers.value, growth: data.activeUsers.growth, trend: [] },
+          }));
+          setQuickStats({
+            avgDuration: data.avgSessionDuration?.value ?? "—",
+            bounceRate: data.bounceRate?.value != null ? `${data.bounceRate.value}%` : "—",
+          });
+          setLastFetched(new Date().toLocaleTimeString());
+        }
 
-      if (trafficRes.status === "fulfilled" && trafficRes.value.ok) {
-        const data = await trafficRes.value.json();
-        if (Array.isArray(data) && data.length > 0) setTraffic(data);
-      }
+        if (trafficRes.status === "fulfilled" && trafficRes.value.ok) {
+          const data = await trafficRes.value.json();
+          if (Array.isArray(data) && data.length > 0) setTraffic(data);
+        }
 
-      if (countriesRes.status === "fulfilled" && countriesRes.value.ok) {
-        const data = await countriesRes.value.json();
-        const top4 = (data.countries ?? []).slice(0, 4) as CountryItem[];
-        if (top4.length > 0) setCountries(top4);
+        if (countriesRes.status === "fulfilled" && countriesRes.value.ok) {
+          const data = await countriesRes.value.json();
+          const top4 = (data.countries ?? []).slice(0, 4) as CountryItem[];
+          if (top4.length > 0) setCountries(top4);
+        }
+      } finally {
+        setIsLoading(false);
       }
     }
 
@@ -100,9 +105,13 @@ export default function DashboardPage() {
             <h2 className="text-sm font-semibold text-slate-400 uppercase tracking-wider">
               Key Metrics
             </h2>
-            <span className="text-[11px] text-slate-600 font-mono">
-              {lastFetched !== "Loading…" ? `Updated at ${lastFetched}` : lastFetched}
-            </span>
+            {isLoading ? (
+              <span className="inline-block w-32 h-3 rounded bg-white/10 animate-pulse" />
+            ) : (
+              <span className="text-[11px] text-slate-600 font-mono">
+                {lastFetched !== "Loading…" ? `Updated at ${lastFetched}` : lastFetched}
+              </span>
+            )}
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {cards.map((card) => {
@@ -118,6 +127,7 @@ export default function DashboardPage() {
                   color={card.color}
                   prefix={card.prefix}
                   suffix={card.suffix}
+                  loading={isLoading}
                 />
               );
             })}
