@@ -36,28 +36,36 @@ export async function GET() {
       orderBys: [
         { metric: { metricName: 'eventCount' }, desc: true },
       ],
-      limit: 25,
+      limit: 50,
     });
 
-    // Label events by likely source for display in the dashboard
+    // GA4 auto-collected events — everything else is a custom/GTM event
+    const AUTO_EVENTS = new Set([
+      'page_view', 'session_start', 'first_visit', 'user_engagement',
+      'scroll', 'click', 'file_download', 'form_start', 'form_submit',
+      'video_start', 'video_progress', 'video_complete',
+    ]);
+
     const getSource = (name: string): string => {
-      const map: Record<string, string> = {
-        page_view:            'Auto',
-        session_start:        'Auto',
-        first_visit:          'Auto',
-        user_engagement:      'Auto',
-        scroll:               'Auto',
-        click:                'GTM',
-        presale_clicked:      'Hero CTA',
-        wallet_connected:     'Web3 Modal',
-        token_purchase:       'Checkout',
-        cta_clicked:          'Multiple',
-        whitepaper_download:  'Docs Page',
-        form_submit:          'Contact Form',
-        video_play:           'Media',
-        outbound_click:       'GTM',
+      if (AUTO_EVENTS.has(name)) return 'Auto';
+      // Named custom sources
+      const known: Record<string, string> = {
+        presale_clicked:     'Hero CTA',
+        wallet_connected:    'Web3 Modal',
+        token_purchase:      'Checkout',
+        cta_clicked:         'Multiple',
+        whitepaper_download: 'Docs Page',
+        video_play:          'Media',
+        outbound_click:      'GTM',
+        buy_now_click:       'Hero CTA',
+        whitepaper_click:    'Docs Page',
+        presale_join_click:  'Hero CTA',
+        newsletter_subscribe:'Newsletter',
+        social_icon_click:   'Social',
+        footer_click:        'Footer',
+        powered_by_click:    'Footer',
       };
-      return map[name] ?? 'GTM';
+      return known[name] ?? 'GTM Custom';
     };
 
     const data = response.rows?.map((row) => {
